@@ -1,4 +1,5 @@
 import os
+import requests
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -47,6 +48,8 @@ async def help(ctx, command=None, extra=None):
             name="`~roles`", value="A list of all assignable roles in the server.\nUsage: ~roles", inline=False)
         allhelpEmbed.add_field(
             name="`~calc`", value="A list of all commands and their functions.\nUsage: ~calc <expr> where expr is a mathematical expression\nExample: 1+(2x3)", inline=False)
+        allhelpEmbed.add_field(
+            name="`~exchange`", value="A tool to get exchange rates between two currencies.\nUsage: ~exchange <from currency> <to currency>\nExample: ~exchange USD CAD", inline=False)
     elif command == "help" and extra == "help":
         commandEmbed = discord.Embed(
             title="**Do it again~~", description="***Dumbass***", color=0x00ff00)
@@ -68,6 +71,9 @@ async def help(ctx, command=None, extra=None):
     elif command == "calc":
         commandEmbed = discord.Embed(
             title="***~calc***", description="A list of all commands and their functions.\nUsage: ~calc <expr> where expr is a mathematical expression\nExample: ~calc 1+(2x3)", color=0x00ff00)
+    elif command == "exchange":
+        commandEmbed = discord.Embed(
+            title="***~exchange***", description="A tool to get exchange rates between two currencies.\nUsage: ~exchange <from currency> <to currency>\nExample: ~exchange USD CAD", color=0x00ff00)
     await ctx.send(embed=commandEmbed) if commandEmbed else await ctx.send(embed=allhelpEmbed)
 
 
@@ -80,6 +86,27 @@ async def roles(ctx):
             embedVar.add_field(name="___________",
                                value=role.name, inline=False)
     await ctx.send(embed=embedVar)
+
+
+@bot.command()
+async def exchange(ctx, from_currency, to_currency):
+    url = os.getenv('ExchangeAPI_URL') + from_currency
+    response = requests.get(url)
+    data = response.json()
+    if data["result"] == "error":
+        error = data["error-type"]
+        if error == "unsupported-code":
+            await ctx.send("**Currency not supported :(**")
+        elif error in ["malformed-request", "invalid-key", "quota-reached"]:
+            await ctx.send(f"Request failed due to error: {error}, Contact Majboori for assistance.")
+    elif data["result"] == "success":
+        to_currency_rate = data["conversion_rates"][to_currency]
+        time = data["time_last_update_utc"]
+        currencyEmbed = discord.Embed(
+            title="Currency Exchange", description=f"Exchange rate from {from_currency} to {to_currency}:", color=0x00ff00)
+        currencyEmbed.add_field(
+            name=f"1 {from_currency} = {to_currency_rate} {to_currency}", value=f"*Last Updated = {time} UTC*", inline=False)
+        await ctx.send(embed=currencyEmbed)
 
 
 @bot.command()
