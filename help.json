@@ -1,0 +1,32 @@
+{
+    "help_command_descriptions": [
+        {
+            "name": "help",
+            "description": "A list of all commands (or a specific command) and their functions.\nUsage: ~help <command (optional)>"
+        },
+        {
+            "name": "hello",
+            "description": "Say Hello to the bot.\nUsage: ~hello"
+        },
+        {
+            "name": "rps",
+            "description": "Play Rock, Paper, Scissors with the bot!\nUsage: ~rps <choice> where choice can be either rock, paper, or scissor"
+        },
+        {
+            "name": "ttt",
+            "description": "Play Tic Tac Toe with the bot!\nUsage: ~ttt start to start a game"
+        },
+        {
+            "name": "roles",
+            "description": "A list of all assignable roles in the server.\nUsage: ~roles"
+        },
+        {
+            "name": "calc",
+            "description": "A list of all commands and their functions.\nUsage: ~calc <expr> where expr is a mathematical expression\nExample: 1+(2x3)"
+        },
+        {
+            "name": "exchange",
+            "description": "A tool to get exchange rates between two currencies.\nUsage: ~exchange <from currency> <to currency>\nExample: ~exchange USD CAD"
+        }
+    ]
+}

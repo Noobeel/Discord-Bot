@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
@@ -33,48 +34,28 @@ async def hello(ctx, member=discord.Member):
 @bot.command()
 async def help(ctx, command=None, extra=None):
     commandEmbed = allhelpEmbed = None
+    directory = os.path.abspath(__file__).split('\\')
+    del directory[-1]
+    dataFile = open('\\'.join(directory) + '\\help.json')
+    data = json.load(dataFile)
     if not command:
         allhelpEmbed = discord.Embed(
             title="Help", description="**A list of all commands along with their functions and usage examples:**", color=0x00ff00)
-        allhelpEmbed.add_field(
-            name="`~help`", value="A list of all commands (or a specific command) and their functions.\nUsage: ~help <command (optional)>", inline=False)
-        allhelpEmbed.add_field(
-            name="`~hello`", value="Say Hello to the bot.\nUsage: ~hello", inline=False)
-        allhelpEmbed.add_field(
-            name="`~rps`", value="Play Rock, Paper, Scissors with the bot!\nUsage: ~rps <choice> where choice can be either rock, paper, or scissor", inline=False)
-        allhelpEmbed.add_field(
-            name="`~ttt`", value="Play Tic Tac Toe with the bot!\nUsage: ~ttt start to start a game", inline=False)
-        allhelpEmbed.add_field(
-            name="`~roles`", value="A list of all assignable roles in the server.\nUsage: ~roles", inline=False)
-        allhelpEmbed.add_field(
-            name="`~calc`", value="A list of all commands and their functions.\nUsage: ~calc <expr> where expr is a mathematical expression\nExample: 1+(2x3)", inline=False)
-        allhelpEmbed.add_field(
-            name="`~exchange`", value="A tool to get exchange rates between two currencies.\nUsage: ~exchange <from currency> <to currency>\nExample: ~exchange USD CAD", inline=False)
-    elif command == "help" and extra == "help":
-        commandEmbed = discord.Embed(
-            title="**Do it again~~", description="***Dumbass***", color=0x00ff00)
-    elif command == "help":
-        commandEmbed = discord.Embed(
-            title="***~help***", description="A list of all commands (or a specific command) and their functions.\nUsage: ~help <command (optional)>\nMight as well do `~help help help` at this point", color=0x00ff00)
-    elif command == "hello":
-        commandEmbed = discord.Embed(
-            title="***~hello***", description="Say Hello to the bot.\nUsage: ~hello", color=0x00ff00)
-    elif command == "rps":
-        commandEmbed = discord.Embed(
-            title="***~rps***", description="Play Rock, Paper, Scissors with the bot!\nUsage: ~rps <choice> where choice can be either rock, paper, or scissor", color=0x00ff00)
-    elif command == "ttt":
-        commandEmbed = discord.Embed(
-            title="***~ttt***", description="Play Tic Tac Toe with the bot!\nUsage: ~ttt start to start a game", color=0x00ff00)
-    elif command == "roles":
-        commandEmbed = discord.Embed(
-            title="***~roles***", description="A list of all assignable roles in the server.\nUsage: ~roles", color=0x00ff00)
-    elif command == "calc":
-        commandEmbed = discord.Embed(
-            title="***~calc***", description="A list of all commands and their functions.\nUsage: ~calc <expr> where expr is a mathematical expression\nExample: ~calc 1+(2x3)", color=0x00ff00)
-    elif command == "exchange":
-        commandEmbed = discord.Embed(
-            title="***~exchange***", description="A tool to get exchange rates between two currencies.\nUsage: ~exchange <from currency> <to currency>\nExample: ~exchange USD CAD", color=0x00ff00)
+        for commandInfo in data['help_command_descriptions']:
+            allhelpEmbed.add_field(
+                name=f"`~{commandInfo['name']}`", value=commandInfo['description'], inline=False)
+    else:
+        if command == "help" and extra == "help":
+            commandEmbed = discord.Embed(
+                title="~~Do it again~~", description="***Dumbass***", color=0x00ff00)
+        else:
+            for commandInfo in data['help_command_descriptions']:
+                if command == commandInfo['name']:
+                    commandEmbed = discord.Embed(
+                        title=f"***~{commandInfo['name']}***", description=f"***{commandInfo['description']}***", color=0x00ff00)
+                    break
     await ctx.send(embed=commandEmbed) if commandEmbed else await ctx.send(embed=allhelpEmbed)
+    dataFile.close()
 
 
 @bot.command()
@@ -97,7 +78,7 @@ async def exchange(ctx, from_currency, to_currency):
         error = data["error-type"]
         if error == "unsupported-code":
             await ctx.send("**Currency not supported :(**")
-        elif error in ["malformed-request", "invalid-key", "quota-reached"]:
+        elif error in ("malformed-request", "invalid-key", "quota-reached"):
             await ctx.send(f"Request failed due to error: {error}, Contact Majboori for assistance.")
     elif data["result"] == "success":
         to_currency_rate = data["conversion_rates"][to_currency]
@@ -111,36 +92,60 @@ async def exchange(ctx, from_currency, to_currency):
 
 @bot.command()
 async def calc(ctx, expression):
-    # use stack, + - * / ( ) ^ % ! [ ] < >
-    pass
+    # + - * / ( ) ^ % ! [ ] < >
+    # calculate, account for brackets, account for invalid expression
+    stack = []
+    result = 0
+    prev = 'None'
+    for index in range(len(expression)):
+        if expression[index].isdigit():
+            if prev.isdigit():
+                if index+1 < len(expression):
+                    if expression[index+1].isdigit():
+                        prev += expression[index]
+                    else:
+                        stack.append(prev + expression[index])
+                else:
+                    stack.append(prev + expression[index])
+            else:
+                if index+1 < len(expression):
+                    if not expression[index+1].isdigit(): 
+                        stack.append(expression[index])
+                else: 
+                    stack.append(expression[index])
+                prev = expression[index]
+        elif expression[index] in ['+', '-', '*', '/', '^', '%', '!', '<', '>']:
+            prev = 'None'
+            stack.append(expression[index])
+    await ctx.send(f"Result for {expression} is {result}")
 
 
-@bot.event
+@ bot.event
 async def on_raw_reaction_add(payload):
     pass
 
 
-@bot.event
+@ bot.event
 async def on_raw_reaction_remove(payload):
     pass
 
 
-@bot.event
+@ bot.event
 async def on_member_join(member):
-    joinEmbed = discord.Embed(title="Welcome to Majboori's Server!",
+    joinEmbed=discord.Embed(title="Welcome to Majboori's Server!",
                               description=f"{member.mention} Remember to read and agree to server rules and enjoy your stay!", color=0x00ff00)
     joinEmbed.set_thumbnail(url=member.avatar_url_as(size=2048))
     await bot.get_channel(799175678443782164).send(embed=joinEmbed)
 
 
-@bot.event
+@ bot.event
 async def on_member_remove(member):
-    message = await bot.get_channel(799175678443782164).send(str(member.display_name) + " has left the server")
+    message=await bot.get_channel(799175678443782164).send(str(member.display_name) + " has left the server")
     await message.add_reaction('<:PepeHands:702257643950964877>')
 
 
 if __name__ == "__main__":
-    all_cogs = ['cogs.rps', 'cogs.ttt']
+    all_cogs=['cogs.rps', 'cogs.ttt']
     for cog in all_cogs:
         bot.load_extension(cog)
 
