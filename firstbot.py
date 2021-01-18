@@ -109,15 +109,29 @@ async def calc(ctx, expression):
                     stack.append(prev + expression[index])
             else:
                 if index+1 < len(expression):
-                    if not expression[index+1].isdigit(): 
+                    if not expression[index+1].isdigit():
                         stack.append(expression[index])
-                else: 
+                else:
                     stack.append(expression[index])
                 prev = expression[index]
         elif expression[index] in ['+', '-', '*', '/', '^', '%', '!', '<', '>']:
             prev = 'None'
             stack.append(expression[index])
     await ctx.send(f"Result for {expression} is {result}")
+
+
+@bot.command()
+async def suggest(ctx, *args):
+    if not args:
+        await ctx.send("__***Error:***__\n**Usage: `~suggest <suggestion>` to send your suggestion!**")
+        return
+    await ctx.message.delete()
+    suggestEmbed = discord.Embed(title="A new suggestion has arrived!",
+                                 description="React with <:upvote:800568171282038804> or <:downvote:800568135282589716> to upvote or downvote this suggestion.", color=0x00ff00)
+    suggestEmbed.add_field(name="Suggestion:", value=' '.join(args), inline=False)
+    message = await bot.get_channel(800566984273035264).send(embed=suggestEmbed)
+    await message.add_reaction('<:upvote:800568171282038804>')
+    await message.add_reaction('<:downvote:800568135282589716>')
 
 
 @ bot.event
@@ -132,7 +146,7 @@ async def on_raw_reaction_remove(payload):
 
 @ bot.event
 async def on_member_join(member):
-    joinEmbed=discord.Embed(title="Welcome to Majboori's Server!",
+    joinEmbed = discord.Embed(title="Welcome to Majboori's Server!",
                               description=f"{member.mention} Remember to read and agree to server rules and enjoy your stay!", color=0x00ff00)
     joinEmbed.set_thumbnail(url=member.avatar_url_as(size=2048))
     await bot.get_channel(799175678443782164).send(embed=joinEmbed)
@@ -140,12 +154,12 @@ async def on_member_join(member):
 
 @ bot.event
 async def on_member_remove(member):
-    message=await bot.get_channel(799175678443782164).send(str(member.display_name) + " has left the server")
+    message = await bot.get_channel(799175678443782164).send(str(member.display_name) + " has left the server")
     await message.add_reaction('<:PepeHands:702257643950964877>')
 
 
 if __name__ == "__main__":
-    all_cogs=['cogs.rps', 'cogs.ttt']
+    all_cogs = ['cogs.rps', 'cogs.ttt']
     for cog in all_cogs:
         bot.load_extension(cog)
 

@@ -27,6 +27,10 @@
         {
             "name": "exchange",
             "description": "A tool to get exchange rates between two currencies.\nUsage: ~exchange <from currency> <to currency>\nExample: ~exchange USD CAD"
+        },
+        {
+            "name": "suggest",
+            "description": "Send in your server suggestions anonymously to be voted on.\nUsage: ~suggest <suggestion>\nExample: ~suggest Make the server great again!"
         }
     ]
 }
