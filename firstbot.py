@@ -71,23 +71,26 @@ async def roles(ctx):
 
 @bot.command()
 async def exchange(ctx, from_currency, to_currency):
-    url = os.getenv('ExchangeAPI_URL') + from_currency
-    response = requests.get(url)
-    data = response.json()
-    if data["result"] == "error":
-        error = data["error-type"]
-        if error == "unsupported-code":
-            await ctx.send("**Currency not supported :(**")
-        elif error in ("malformed-request", "invalid-key", "quota-reached"):
-            await ctx.send(f"Request failed due to error: {error}, Contact Majboori for assistance.")
-    elif data["result"] == "success":
-        to_currency_rate = data["conversion_rates"][to_currency]
-        time = data["time_last_update_utc"]
-        currencyEmbed = discord.Embed(
-            title="Currency Exchange", description=f"Exchange rate from {from_currency} to {to_currency}:", color=0x00ff00)
-        currencyEmbed.add_field(
-            name=f"1 {from_currency} = {to_currency_rate} {to_currency}", value=f"*Last Updated = {time} UTC*", inline=False)
-        await ctx.send(embed=currencyEmbed)
+    if not from_currency or not to_currency:
+        await ctx.send("Enter a valid currency code; Example: ~exchange USD CAD")
+    else:
+        url = os.getenv('ExchangeAPI_URL') + from_currency.upper()
+        response = requests.get(url)
+        data = response.json()
+        if data["result"] == "error":
+            error = data["error-type"]
+            if error == "unsupported-code":
+                await ctx.send("**Currency not supported :(**")
+            elif error in ("malformed-request", "invalid-key", "quota-reached"):
+                await ctx.send(f"Request failed due to error: {error}, Contact Majboori for assistance.")
+        elif data["result"] == "success":
+            to_currency_rate = data["conversion_rates"][to_currency.upper()]
+            time = data["time_last_update_utc"]
+            currencyEmbed = discord.Embed(
+                title="Currency Exchange", description=f"Exchange rate from {from_currency.upper()} to {to_currency.upper()}:", color=0x00ff00)
+            currencyEmbed.add_field(
+                name=f"1 {from_currency.upper()} = {to_currency_rate} {to_currency.upper()}", value=f"*Last Updated = {time} UTC*", inline=False)
+            await ctx.send(embed=currencyEmbed)
 
 
 @bot.command()
